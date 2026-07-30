@@ -50,7 +50,7 @@ CUSTOM_CSS = """
 
 [data-testid="stAppViewContainer"] { background-color: var(--maven-bg); }
 [data-testid="stHeader"] { background-color: rgba(0,0,0,0); }
-.block-container { padding-top: 1.25rem; padding-bottom: 2rem; max-width: 880px; }
+.block-container { padding-top: 1.25rem; padding-bottom: 2rem; max-width: 95%; }
 
 h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; color: var(--maven-ink) !important; }
 p, li, span, label, .stMarkdown { color: var(--maven-ink); }
