@@ -298,8 +298,6 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 render_splash_once()
 st_autorefresh(interval=5 * 60 * 1000, key="brief_refresh")
 
-with st.container(border=True):
-    st.image(str(BASE_DIR / "assets" / "maven-header.png"), use_container_width=True)
 st.markdown('<p class="maven-subtitle">Commodities Market Intelligence</p>', unsafe_allow_html=True)
 
 tab_morning, tab_eod, tab_news = st.tabs(["🌅 Morning Brief", "🌆 End-of-Day Brief", "🚨 Breaking News"])
