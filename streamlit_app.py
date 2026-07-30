@@ -1,7 +1,7 @@
 import calendar
 import re
 import socket
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -33,6 +33,18 @@ def format_time_no_leading_zero(dt, with_seconds=False):
     return f"{hour12}:{suffix}"
 
 
+def next_display_line(hour_et):
+    now = datetime.now(tz=ET)
+    next_run = now.replace(hour=hour_et, minute=0, second=0, microsecond=0)
+    if next_run <= now:
+        next_run += timedelta(days=1)
+
+    days_ahead = (next_run.date() - now.date()).days
+    day_label = {0: "today", 1: "tomorrow"}.get(days_ahead, next_run.strftime("%A"))
+    time_label = f"{format_time_no_leading_zero(next_run)} ET"
+    return f"Report will display {day_label} at {time_label}."
+
+
 def list_briefs(folder):
     dir_path = BASE_DIR / "briefs" / folder
     if not dir_path.exists():
@@ -44,7 +56,9 @@ def list_briefs(folder):
     )
 
 
-def render_brief_tab(folder, label):
+def render_brief_tab(folder, label, hour_et):
+    st.caption(next_display_line(hour_et))
+
     files = list_briefs(folder)
     if not files:
         st.info(f"No {label.lower()} briefs yet — check back after the next scheduled run.")
@@ -127,10 +141,10 @@ st.title("📈 Commodities Market Briefs")
 tab_morning, tab_eod, tab_news = st.tabs(["🌅 Morning Brief", "🌆 End-of-Day Brief", "🚨 Breaking News"])
 
 with tab_morning:
-    render_brief_tab("morning", "Morning Brief")
+    render_brief_tab("morning", "Morning Brief", hour_et=8)
 
 with tab_eod:
-    render_brief_tab("eod", "End-of-Day Brief")
+    render_brief_tab("eod", "End-of-Day Brief", hour_et=17)
 
 with tab_news:
     render_breaking_news_tab()
