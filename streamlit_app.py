@@ -41,11 +41,11 @@ TRENDING_WORD_RE = re.compile(r"[A-Za-z][A-Za-z\-']+")
 CUSTOM_CSS = """
 <style>
 :root {
-    --maven-bg: #EAF3EF;
-    --maven-card: #FFFFFF;
-    --maven-ink: #16302A;
-    --maven-accent: #2F6D53;
-    --maven-border: #D3E6DD;
+    --maven-bg: #10201B;
+    --maven-card: #16302A;
+    --maven-ink: #EAF3EF;
+    --maven-accent: #57C99D;
+    --maven-border: #24443A;
 }
 
 [data-testid="stAppViewContainer"] { background-color: var(--maven-bg); }
@@ -61,7 +61,7 @@ p, li, span, label, .stMarkdown { color: var(--maven-ink); }
     font-size: 0.95rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin: -0.5rem 0 1rem 0;
+    margin: 0.75rem 0 1rem 0;
 }
 
 [data-testid="stTabs"] button[role="tab"] {
@@ -90,7 +90,7 @@ p, li, span, label, .stMarkdown { color: var(--maven-ink); }
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(160deg, #16302A 0%, #234C3D 100%);
+    background: linear-gradient(160deg, #0F1E1A 0%, #1E3E32 100%);
     animation: maven-splash-fade 4.6s ease forwards;
     pointer-events: none;
 }
@@ -298,7 +298,8 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 render_splash_once()
 st_autorefresh(interval=5 * 60 * 1000, key="brief_refresh")
 
-st.image(str(BASE_DIR / "assets" / "maven-header.png"), use_container_width=True)
+with st.container(border=True):
+    st.image(str(BASE_DIR / "assets" / "maven-header.png"), use_container_width=True)
 st.markdown('<p class="maven-subtitle">Commodities Market Intelligence</p>', unsafe_allow_html=True)
 
 tab_morning, tab_eod, tab_news = st.tabs(["🌅 Morning Brief", "🌆 End-of-Day Brief", "🚨 Breaking News"])
