@@ -1,6 +1,7 @@
 import calendar
 import re
 import socket
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -18,13 +19,23 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
 ET = ZoneInfo("America/New_York")
 
 NEWS_FEEDS = [
-    ("Investing.com — Commodities & Futures", "https://www.investing.com/rss/news_11.rss"),
-    ("Investing.com — Energy Analysis", "https://www.investing.com/rss/commodities_Energy.rss"),
-    ("Investing.com — Metals Analysis", "https://www.investing.com/rss/commodities_Metals.rss"),
-    ("Investing.com — Agriculture Analysis", "https://www.investing.com/rss/commodities_Agriculture.rss"),
-    ("OilPrice.com", "https://oilprice.com/rss/main"),
-    ("Mining.com", "https://www.mining.com/feed/"),
+    ("Investing.com — Commodities & Futures", "https://www.investing.com/rss/news_11.rss", "General"),
+    ("Investing.com — Energy Analysis", "https://www.investing.com/rss/commodities_Energy.rss", "Energy"),
+    ("Investing.com — Metals Analysis", "https://www.investing.com/rss/commodities_Metals.rss", "Metals"),
+    ("Investing.com — Agriculture Analysis", "https://www.investing.com/rss/commodities_Agriculture.rss", "Ags"),
+    ("OilPrice.com", "https://oilprice.com/rss/main", "Energy"),
+    ("Mining.com", "https://www.mining.com/feed/", "Metals"),
 ]
+
+TRENDING_STOPWORDS = {
+    "the", "a", "an", "to", "of", "in", "on", "for", "as", "with", "its", "it", "will",
+    "from", "and", "is", "are", "has", "have", "this", "that", "at", "by", "be", "after",
+    "amid", "over", "into", "than", "up", "down", "could", "may", "says", "said", "set",
+    "how", "why", "what", "not", "but", "still", "more", "most", "now", "out", "off",
+    "your", "you", "we", "us", "about", "eu", "new", "next", "amidst", "their", "his",
+    "her", "them", "these", "those", "can", "here", "there",
+}
+TRENDING_WORD_RE = re.compile(r"[A-Za-z][A-Za-z\-']+")
 
 
 def format_time_no_leading_zero(dt, with_seconds=False):
@@ -76,7 +87,7 @@ def render_brief_tab(folder, label, hour_et):
 @st.cache_data(ttl=180)
 def fetch_breaking_news():
     items = []
-    for source, url in NEWS_FEEDS:
+    for source, url, category in NEWS_FEEDS:
         try:
             parsed = feedparser.parse(url, request_headers={"User-Agent": "Mozilla/5.0"})
         except Exception:
@@ -89,6 +100,7 @@ def fetch_breaking_news():
                     "title": entry.get("title", "Untitled"),
                     "link": entry.get("link", ""),
                     "source": source,
+                    "category": category,
                     "timestamp": timestamp,
                 }
             )
@@ -104,6 +116,51 @@ def fetch_breaking_news():
         deduped.append(item)
 
     return deduped[:30]
+
+
+def summarize_news(items):
+    by_category = Counter(item["category"] for item in items)
+    timestamps = [item["timestamp"] for item in items if item["timestamp"]]
+
+    word_counts = {}
+    for item in items:
+        for match in TRENDING_WORD_RE.findall(item["title"]):
+            key = match.lower()
+            if key in TRENDING_STOPWORDS or len(key) < 4:
+                continue
+            display, count = word_counts.get(key, (match, 0))
+            word_counts[key] = (display, count + 1)
+
+    trending = [display for display, count in sorted(word_counts.values(), key=lambda pair: pair[1], reverse=True) if count >= 2]
+
+    return {
+        "total": len(items),
+        "by_category": by_category,
+        "oldest": min(timestamps) if timestamps else None,
+        "newest": max(timestamps) if timestamps else None,
+        "trending": trending[:6],
+    }
+
+
+def render_news_summary(summary):
+    cols = st.columns(5)
+    cols[0].metric("Headlines", summary["total"])
+    cols[1].metric("Energy", summary["by_category"].get("Energy", 0))
+    cols[2].metric("Metals", summary["by_category"].get("Metals", 0))
+    cols[3].metric("Ags", summary["by_category"].get("Ags", 0))
+    cols[4].metric("General", summary["by_category"].get("General", 0))
+
+    if summary["oldest"] and summary["newest"]:
+        oldest = datetime.fromtimestamp(summary["oldest"], tz=timezone.utc).astimezone(ET)
+        newest = datetime.fromtimestamp(summary["newest"], tz=timezone.utc).astimezone(ET)
+        span_hours = max(1, round((summary["newest"] - summary["oldest"]) / 3600))
+        st.caption(
+            f"Covering the last ~{span_hours}h — {format_time_no_leading_zero(oldest)} ET "
+            f"to {format_time_no_leading_zero(newest)} ET"
+        )
+
+    if summary["trending"]:
+        st.markdown(f"**🔥 Trending:** {', '.join(summary['trending'])}")
 
 
 def render_breaking_news_tab():
@@ -123,6 +180,9 @@ def render_breaking_news_tab():
     if not items:
         st.info("No headlines available right now — try refreshing in a moment.")
         return
+
+    render_news_summary(summarize_news(items))
+    st.divider()
 
     for item in items:
         if item["timestamp"]:
