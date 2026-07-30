@@ -17,6 +17,7 @@ st.set_page_config(page_title="Commodities Market Briefs", page_icon="📈", lay
 BASE_DIR = Path(__file__).parent
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
 ET = ZoneInfo("America/New_York")
+GREETING_NAME = "Evan"
 
 NEWS_FEEDS = [
     ("Investing.com — Commodities & Futures", "https://www.investing.com/rss/news_11.rss", "General"),
@@ -36,6 +37,102 @@ TRENDING_STOPWORDS = {
     "her", "them", "these", "those", "can", "here", "there",
 }
 TRENDING_WORD_RE = re.compile(r"[A-Za-z][A-Za-z\-']+")
+
+CUSTOM_CSS = """
+<style>
+:root {
+    --maven-bg: #EAF3EF;
+    --maven-card: #FFFFFF;
+    --maven-ink: #16302A;
+    --maven-accent: #2F6D53;
+    --maven-border: #D3E6DD;
+}
+
+[data-testid="stAppViewContainer"] { background-color: var(--maven-bg); }
+[data-testid="stHeader"] { background-color: rgba(0,0,0,0); }
+.block-container { padding-top: 1.25rem; padding-bottom: 2rem; max-width: 880px; }
+
+h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; color: var(--maven-ink) !important; }
+p, li, span, label, .stMarkdown { color: var(--maven-ink); }
+
+.maven-subtitle {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--maven-accent);
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: -0.5rem 0 1rem 0;
+}
+
+[data-testid="stTabs"] button[role="tab"] {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.95rem;
+    color: var(--maven-ink);
+}
+[data-testid="stTabs"] button[aria-selected="true"] {
+    color: var(--maven-accent) !important;
+    border-bottom-color: var(--maven-accent) !important;
+}
+
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border-radius: 10px !important;
+    border-color: var(--maven-border) !important;
+    background-color: var(--maven-card) !important;
+}
+
+[data-testid="stMetricValue"] { color: var(--maven-ink); font-size: 1.4rem; }
+[data-testid="stMetricLabel"] { color: var(--maven-accent); }
+
+#maven-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #16302A 0%, #234C3D 100%);
+    animation: maven-splash-fade 4.6s ease forwards;
+    pointer-events: none;
+}
+#maven-splash span {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    color: #EAF3EF;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    animation: maven-text-fade 4.6s ease forwards;
+}
+@keyframes maven-splash-fade {
+    0% { opacity: 1; }
+    78% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+}
+@keyframes maven-text-fade {
+    0% { opacity: 0; transform: translateY(8px); }
+    18% { opacity: 1; transform: translateY(0); }
+    82% { opacity: 1; }
+    100% { opacity: 0; }
+}
+</style>
+"""
+
+
+def greeting_for_now():
+    hour = datetime.now(tz=ET).hour
+    if 5 <= hour < 12:
+        part_of_day = "Morning"
+    elif 12 <= hour < 17:
+        part_of_day = "Afternoon"
+    else:
+        part_of_day = "Evening"
+    return f"Good {part_of_day}, {GREETING_NAME}"
+
+
+def render_splash_once():
+    if st.session_state.get("splash_shown"):
+        return
+    st.session_state["splash_shown"] = True
+    st.markdown(f'<div id="maven-splash"><span>{greeting_for_now()}</span></div>', unsafe_allow_html=True)
 
 
 def format_time_no_leading_zero(dt, with_seconds=False):
@@ -81,7 +178,8 @@ def render_brief_tab(folder, label, hour_et):
 
     caption = f"Latest {label.lower()} — {selected}" if selected == dates[0] else f"{label} — {selected}"
     st.caption(caption)
-    st.markdown(chosen.read_text(encoding="utf-8"))
+    with st.container(border=True):
+        st.markdown(chosen.read_text(encoding="utf-8"))
 
 
 @st.cache_data(ttl=180)
@@ -143,24 +241,25 @@ def summarize_news(items):
 
 
 def render_news_summary(summary):
-    cols = st.columns(5)
-    cols[0].metric("Headlines", summary["total"])
-    cols[1].metric("Energy", summary["by_category"].get("Energy", 0))
-    cols[2].metric("Metals", summary["by_category"].get("Metals", 0))
-    cols[3].metric("Ags", summary["by_category"].get("Ags", 0))
-    cols[4].metric("General", summary["by_category"].get("General", 0))
+    with st.container(border=True):
+        cols = st.columns(5)
+        cols[0].metric("Headlines", summary["total"])
+        cols[1].metric("Energy", summary["by_category"].get("Energy", 0))
+        cols[2].metric("Metals", summary["by_category"].get("Metals", 0))
+        cols[3].metric("Ags", summary["by_category"].get("Ags", 0))
+        cols[4].metric("General", summary["by_category"].get("General", 0))
 
-    if summary["oldest"] and summary["newest"]:
-        oldest = datetime.fromtimestamp(summary["oldest"], tz=timezone.utc).astimezone(ET)
-        newest = datetime.fromtimestamp(summary["newest"], tz=timezone.utc).astimezone(ET)
-        span_hours = max(1, round((summary["newest"] - summary["oldest"]) / 3600))
-        st.caption(
-            f"Covering the last ~{span_hours}h — {format_time_no_leading_zero(oldest)} ET "
-            f"to {format_time_no_leading_zero(newest)} ET"
-        )
+        if summary["oldest"] and summary["newest"]:
+            oldest = datetime.fromtimestamp(summary["oldest"], tz=timezone.utc).astimezone(ET)
+            newest = datetime.fromtimestamp(summary["newest"], tz=timezone.utc).astimezone(ET)
+            span_hours = max(1, round((summary["newest"] - summary["oldest"]) / 3600))
+            st.caption(
+                f"Covering the last ~{span_hours}h — {format_time_no_leading_zero(oldest)} ET "
+                f"to {format_time_no_leading_zero(newest)} ET"
+            )
 
-    if summary["trending"]:
-        st.markdown(f"**🔥 Trending:** {', '.join(summary['trending'])}")
+        if summary["trending"]:
+            st.markdown(f"**🔥 Trending:** {', '.join(summary['trending'])}")
 
 
 def render_breaking_news_tab():
@@ -182,7 +281,7 @@ def render_breaking_news_tab():
         return
 
     render_news_summary(summarize_news(items))
-    st.divider()
+    st.write("")
 
     for item in items:
         if item["timestamp"]:
@@ -190,13 +289,17 @@ def render_breaking_news_tab():
             when_str = f"{when.strftime('%b %d')}, {format_time_no_leading_zero(when)} ET"
         else:
             when_str = "time unknown"
-        st.markdown(f"**[{item['title']}]({item['link']})**  \n*{item['source']} — {when_str}*")
-        st.divider()
+        with st.container(border=True):
+            st.markdown(f"**[{item['title']}]({item['link']})**")
+            st.caption(f"{item['source']} — {when_str}")
 
 
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+render_splash_once()
 st_autorefresh(interval=5 * 60 * 1000, key="brief_refresh")
 
-st.title("📈 Commodities Market Briefs")
+st.image(str(BASE_DIR / "assets" / "maven-header.png"), use_container_width=True)
+st.markdown('<p class="maven-subtitle">Commodities Market Intelligence</p>', unsafe_allow_html=True)
 
 tab_morning, tab_eod, tab_news = st.tabs(["🌅 Morning Brief", "🌆 End-of-Day Brief", "🚨 Breaking News"])
 
