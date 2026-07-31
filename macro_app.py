@@ -63,10 +63,11 @@ def tags_for_title(title):
 CUSTOM_CSS = """
 <style>
 :root {
-    --macro-bg: #EAF0F4;
-    --macro-ink: #2B3A4A;
-    --macro-accent: #5B7C99;
-    --macro-border: #C7D6E0;
+    --macro-bg: #0B1A2E;
+    --macro-card: #122644;
+    --macro-ink: #AFDBFF;
+    --macro-accent: #6FC3FF;
+    --macro-border: #23405E;
 }
 
 [data-testid="stAppViewContainer"] { background-color: var(--macro-bg); }
@@ -86,7 +87,7 @@ p, li, span, label, .stMarkdown, h1, h2, h3, h4 { color: var(--macro-ink); }
 }
 
 .macro-brief-card {
-    background-color: #FFFFFF;
+    background-color: var(--macro-card);
     border: 1px solid var(--macro-border);
     border-radius: 12px;
     padding: 1.25rem 1.5rem;
@@ -109,7 +110,7 @@ p, li, span, label, .stMarkdown, h1, h2, h3, h4 { color: var(--macro-ink); }
 [data-testid="stMetricValue"] { color: var(--macro-ink); font-size: 1.6rem; }
 [data-testid="stMetricLabel"] { color: var(--macro-accent); font-size: 0.95rem; }
 
-.stButton button { margin: 0.4rem auto 0 auto; min-height: 2.9rem; font-size: 1.1rem; background-color: var(--macro-accent); color: #FFFFFF; border: none; }
+.stButton button { margin: 0.4rem auto 0 auto; min-height: 2.9rem; font-size: 1.1rem; background-color: var(--macro-accent); color: var(--macro-bg); border: none; font-weight: 600; }
 
 [data-testid="stWidgetLabel"] { text-align: center !important; width: 100%; }
 [data-testid="stWidgetLabel"] label { width: 100%; justify-content: center !important; }
@@ -126,14 +127,14 @@ p, li, span, label, .stMarkdown, h1, h2, h3, h4 { color: var(--macro-ink); }
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(160deg, #C9D9E4 0%, #8FA9BC 100%);
+    background: linear-gradient(160deg, #0A1626 0%, #16324F 100%);
     animation: macro-splash-fade 4.6s ease forwards;
     pointer-events: none;
 }
 #macro-splash span {
     font-family: Georgia, 'Times New Roman', serif;
     font-size: clamp(1.8rem, 5vw, 3rem);
-    color: #2B3A4A;
+    color: #AFDBFF;
     letter-spacing: 0.03em;
     opacity: 0;
     animation: macro-text-fade 4.6s ease forwards;
