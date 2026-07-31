@@ -2,8 +2,7 @@ import calendar
 import re
 import socket
 from collections import Counter
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 import feedparser
@@ -12,10 +11,8 @@ from streamlit_autorefresh import st_autorefresh
 
 socket.setdefaulttimeout(6)
 
-st.set_page_config(page_title="Commodities Market Briefs", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Commodities Market Intelligence", page_icon="🚨", layout="wide")
 
-BASE_DIR = Path(__file__).parent
-DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
 ET = ZoneInfo("America/New_York")
 GREETING_NAME = "Evan"
 
@@ -42,7 +39,6 @@ CUSTOM_CSS = """
 <style>
 :root {
     --maven-bg: #10201B;
-    --maven-card: #16302A;
     --maven-ink: #EAF3EF;
     --maven-accent: #57C99D;
     --maven-border: #24443A;
@@ -50,38 +46,40 @@ CUSTOM_CSS = """
 
 [data-testid="stAppViewContainer"] { background-color: var(--maven-bg); }
 [data-testid="stHeader"] { background-color: rgba(0,0,0,0); }
-.block-container { padding-top: 1.25rem; padding-bottom: 2rem; max-width: 95%; }
+.block-container { padding-top: 1.5rem; padding-bottom: 1.5rem; max-width: 720px; text-align: center; }
 
-h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; color: var(--maven-ink) !important; }
 p, li, span, label, .stMarkdown { color: var(--maven-ink); }
 
 .maven-subtitle {
     font-family: Georgia, 'Times New Roman', serif;
     color: var(--maven-accent);
-    font-size: 0.95rem;
-    letter-spacing: 0.08em;
+    font-size: clamp(2rem, 4.5vw, 2.8rem);
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    margin: 0.75rem 0 1rem 0;
+    text-align: center;
+    margin: 0.25rem 0 1.1rem 0;
 }
 
-[data-testid="stTabs"] button[role="tab"] {
+.maven-trending {
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 0.95rem;
-    color: var(--maven-ink);
-}
-[data-testid="stTabs"] button[aria-selected="true"] {
-    color: var(--maven-accent) !important;
-    border-bottom-color: var(--maven-accent) !important;
-}
-
-[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 10px !important;
-    border-color: var(--maven-border) !important;
-    background-color: var(--maven-card) !important;
+    font-size: clamp(1.15rem, 2.6vw, 1.55rem);
+    color: var(--maven-accent);
+    text-align: center;
+    margin: 0.9rem 0 1.4rem 0;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--maven-border);
+    border-bottom: 1px solid var(--maven-border);
 }
 
-[data-testid="stMetricValue"] { color: var(--maven-ink); font-size: 1.4rem; }
-[data-testid="stMetricLabel"] { color: var(--maven-accent); }
+[data-testid="stMetricValue"] { color: var(--maven-ink); font-size: 1.7rem; }
+[data-testid="stMetricLabel"] { color: var(--maven-accent); font-size: 1rem; }
+
+.stButton button { margin: 0 auto; }
+
+.news-row { padding: 0.85rem 0; border-bottom: 1px solid var(--maven-border); text-align: center; }
+.news-row a { color: var(--maven-ink); text-decoration: none; font-weight: 600; font-size: 1.25rem; }
+.news-row a:hover { color: var(--maven-accent); }
+.news-row .news-meta { color: var(--maven-accent); font-size: 1rem; margin-top: 0.25rem; }
 
 #maven-splash {
     position: fixed;
@@ -139,47 +137,6 @@ def format_time_no_leading_zero(dt, with_seconds=False):
     hour12 = dt.hour % 12 or 12
     suffix = dt.strftime("%M:%S %p") if with_seconds else dt.strftime("%M %p")
     return f"{hour12}:{suffix}"
-
-
-def next_display_line(hour_et):
-    now = datetime.now(tz=ET)
-    next_run = now.replace(hour=hour_et, minute=0, second=0, microsecond=0)
-    if next_run <= now:
-        next_run += timedelta(days=1)
-
-    days_ahead = (next_run.date() - now.date()).days
-    day_label = {0: "today", 1: "tomorrow"}.get(days_ahead, next_run.strftime("%A"))
-    time_label = f"{format_time_no_leading_zero(next_run)} ET"
-    return f"Report will display {day_label} at {time_label}."
-
-
-def list_briefs(folder):
-    dir_path = BASE_DIR / "briefs" / folder
-    if not dir_path.exists():
-        return []
-    return sorted(
-        (f for f in dir_path.iterdir() if DATE_RE.match(f.name)),
-        key=lambda f: f.stem,
-        reverse=True,
-    )
-
-
-def render_brief_tab(folder, label, hour_et):
-    st.caption(next_display_line(hour_et))
-
-    files = list_briefs(folder)
-    if not files:
-        st.info(f"No {label.lower()} briefs yet — check back after the next scheduled run.")
-        return
-
-    dates = [f.stem for f in files]
-    selected = st.selectbox("Date", dates, index=0, key=f"{folder}_select")
-    chosen = next(f for f in files if f.stem == selected)
-
-    caption = f"Latest {label.lower()} — {selected}" if selected == dates[0] else f"{label} — {selected}"
-    st.caption(caption)
-    with st.container(border=True):
-        st.markdown(chosen.read_text(encoding="utf-8"))
 
 
 @st.cache_data(ttl=180)
@@ -241,47 +198,43 @@ def summarize_news(items):
 
 
 def render_news_summary(summary):
-    with st.container(border=True):
-        cols = st.columns(5)
-        cols[0].metric("Headlines", summary["total"])
-        cols[1].metric("Energy", summary["by_category"].get("Energy", 0))
-        cols[2].metric("Metals", summary["by_category"].get("Metals", 0))
-        cols[3].metric("Ags", summary["by_category"].get("Ags", 0))
-        cols[4].metric("General", summary["by_category"].get("General", 0))
+    cols = st.columns(5)
+    cols[0].metric("Headlines", summary["total"])
+    cols[1].metric("Energy", summary["by_category"].get("Energy", 0))
+    cols[2].metric("Metals", summary["by_category"].get("Metals", 0))
+    cols[3].metric("Ags", summary["by_category"].get("Ags", 0))
+    cols[4].metric("General", summary["by_category"].get("General", 0))
 
-        if summary["oldest"] and summary["newest"]:
-            oldest = datetime.fromtimestamp(summary["oldest"], tz=timezone.utc).astimezone(ET)
-            newest = datetime.fromtimestamp(summary["newest"], tz=timezone.utc).astimezone(ET)
-            span_hours = max(1, round((summary["newest"] - summary["oldest"]) / 3600))
-            st.caption(
-                f"Covering the last ~{span_hours}h — {format_time_no_leading_zero(oldest)} ET "
-                f"to {format_time_no_leading_zero(newest)} ET"
-            )
+    if summary["oldest"] and summary["newest"]:
+        oldest = datetime.fromtimestamp(summary["oldest"], tz=timezone.utc).astimezone(ET)
+        newest = datetime.fromtimestamp(summary["newest"], tz=timezone.utc).astimezone(ET)
+        span_hours = max(1, round((summary["newest"] - summary["oldest"]) / 3600))
+        st.caption(
+            f"Covering the last ~{span_hours}h — {format_time_no_leading_zero(oldest)} ET "
+            f"to {format_time_no_leading_zero(newest)} ET"
+        )
 
-        if summary["trending"]:
-            st.markdown(f"**🔥 Trending:** {', '.join(summary['trending'])}")
+    if summary["trending"]:
+        st.markdown(f'<div class="maven-trending">🔥 Trending: {", ".join(summary["trending"])}</div>', unsafe_allow_html=True)
 
 
-def render_breaking_news_tab():
-    col_caption, col_button = st.columns([5, 1])
-    with col_button:
-        if st.button("🔄 Refresh now", key="news_refresh"):
-            fetch_breaking_news.clear()
-
-    items = fetch_breaking_news()
-
-    with col_caption:
+def render_breaking_news():
+    _, col_mid, _ = st.columns([1, 2, 1])
+    with col_mid:
         st.caption(
             f"Last refreshed {format_time_no_leading_zero(datetime.now(tz=ET), with_seconds=True)} ET"
             " · also auto-refreshes every 5 minutes"
         )
+        if st.button("🔄 Refresh now", key="news_refresh"):
+            fetch_breaking_news.clear()
+
+    items = fetch_breaking_news()
 
     if not items:
         st.info("No headlines available right now — try refreshing in a moment.")
         return
 
     render_news_summary(summarize_news(items))
-    st.write("")
 
     for item in items:
         if item["timestamp"]:
@@ -289,30 +242,17 @@ def render_breaking_news_tab():
             when_str = f"{when.strftime('%b %d')}, {format_time_no_leading_zero(when)} ET"
         else:
             when_str = "time unknown"
-        with st.container(border=True):
-            st.markdown(f"**[{item['title']}]({item['link']})**")
-            st.caption(f"{item['source']} — {when_str}")
+        st.markdown(
+            f'<div class="news-row"><a href="{item["link"]}" target="_blank">{item["title"]}</a>'
+            f'<div class="news-meta">{item["source"]} — {when_str}</div></div>',
+            unsafe_allow_html=True,
+        )
 
 
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 render_splash_once()
-st_autorefresh(interval=5 * 60 * 1000, key="brief_refresh")
+st_autorefresh(interval=5 * 60 * 1000, key="news_refresh_timer")
 
 st.markdown('<p class="maven-subtitle">Commodities Market Intelligence</p>', unsafe_allow_html=True)
 
-tab_morning, tab_eod, tab_news = st.tabs(["🌅 Morning Brief", "🌆 End-of-Day Brief", "🚨 Breaking News"])
-
-with tab_morning:
-    render_brief_tab("morning", "Morning Brief", hour_et=8)
-
-with tab_eod:
-    render_brief_tab("eod", "End-of-Day Brief", hour_et=17)
-
-with tab_news:
-    render_breaking_news_tab()
-
-st.caption(
-    "Morning/End-of-Day briefs auto-refresh every 5 minutes and update automatically once the "
-    "scheduled routine writes and pushes them to this repo. Breaking News pulls live commodities "
-    "headlines directly and can be refreshed on demand."
-)
+render_breaking_news()
