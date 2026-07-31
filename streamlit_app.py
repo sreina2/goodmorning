@@ -35,6 +35,22 @@ TRENDING_STOPWORDS = {
 }
 TRENDING_WORD_RE = re.compile(r"[A-Za-z][A-Za-z\-']+")
 
+TAG_KEYWORDS = {
+    "US": [r"U\.S\.", r"\bUS\b", r"United States", r"Washington", r"\bFed\b", r"Federal Reserve"],
+    "Asia": [r"China", r"\bAsia", r"Japan", r"Korea", r"\bJKM\b", r"Beijing", r"India"],
+    "Europe": [r"Europe", r"\bEU\b", r"\bTTF\b", r"Russia", r"Ukraine", r"\bUK\b", r"Britain"],
+    "Energy": [r"\boil\b", r"crude", r"\bOPEC\b", r"\bWTI\b", r"\bBrent\b", r"refiner", r"diesel", r"gasoline", r"\bfuel\b"],
+    "Natural Gas": [r"\bgas\b", r"\bLNG\b", r"Henry Hub", r"\bTTF\b", r"\bJKM\b"],
+    "Metals": [r"\bgold\b", r"\bsilver\b", r"\bcopper\b", r"\bmetal", r"\bmining\b", r"\baluminum\b", r"\bsteel\b"],
+    "Ties into FX Markets": [r"\bdollar\b", r"currency", r"\bFX\b", r"\byen\b", r"\beuro\b", r"forex"],
+    "Geopolitical Risks": [r"\bIran\b", r"\bwar\b", r"strike", r"sanction", r"conflict", r"military", r"attack", r"tension", r"Hormuz", r"Suez"],
+}
+TAG_PATTERNS = {tag: re.compile("|".join(patterns), re.IGNORECASE) for tag, patterns in TAG_KEYWORDS.items()}
+
+
+def tags_for_title(title):
+    return [tag for tag, pattern in TAG_PATTERNS.items() if pattern.search(title)]
+
 CUSTOM_CSS = """
 <style>
 :root {
@@ -74,7 +90,10 @@ p, li, span, label, .stMarkdown { color: var(--maven-ink); }
 [data-testid="stMetricValue"] { color: var(--maven-ink); font-size: 1.7rem; }
 [data-testid="stMetricLabel"] { color: var(--maven-accent); font-size: 1rem; }
 
-.stButton button { margin: 0 auto; }
+.stButton button { margin: 0.4rem auto 0 auto; min-height: 2.9rem; font-size: 1.1rem; }
+
+[data-testid="stWidgetLabel"] { text-align: center !important; width: 100%; }
+[data-testid="stWidgetLabel"] label { width: 100%; justify-content: center !important; }
 
 .news-row { padding: 0.85rem 0 !important; border-bottom: 1px solid var(--maven-border); text-align: center !important; }
 .news-row a { color: var(--maven-ink) !important; text-decoration: none !important; font-weight: 600 !important; font-size: 1.25rem !important; }
@@ -147,16 +166,18 @@ def fetch_breaking_news():
             parsed = feedparser.parse(url, request_headers={"User-Agent": "Mozilla/5.0"})
         except Exception:
             continue
-        for entry in parsed.entries[:15]:
+        for entry in parsed.entries[:20]:
             published = getattr(entry, "published_parsed", None) or getattr(entry, "updated_parsed", None)
             timestamp = calendar.timegm(published) if published else None
+            title = entry.get("title", "Untitled")
             items.append(
                 {
-                    "title": entry.get("title", "Untitled"),
+                    "title": title,
                     "link": entry.get("link", ""),
                     "source": source,
                     "category": category,
                     "timestamp": timestamp,
+                    "tags": tags_for_title(title),
                 }
             )
 
@@ -170,7 +191,7 @@ def fetch_breaking_news():
         seen.add(key)
         deduped.append(item)
 
-    return deduped[:30]
+    return deduped[:50]
 
 
 def summarize_news(items):
@@ -225,7 +246,7 @@ def render_breaking_news():
             f"Last refreshed {format_time_no_leading_zero(datetime.now(tz=ET), with_seconds=True)} ET"
             " · also auto-refreshes every 5 minutes"
         )
-        if st.button("🔄 Refresh now", key="news_refresh"):
+        if st.button("🔄 Refresh now", key="news_refresh", use_container_width=True):
             fetch_breaking_news.clear()
 
     items = fetch_breaking_news()
@@ -236,7 +257,19 @@ def render_breaking_news():
 
     render_news_summary(summarize_news(items))
 
-    for item in items:
+    _, col_filter, _ = st.columns([1, 2, 1])
+    with col_filter:
+        selected_tags = st.multiselect("Filter by topic", list(TAG_KEYWORDS.keys()), key="tag_filter")
+
+    filtered_items = (
+        [item for item in items if set(item["tags"]) & set(selected_tags)] if selected_tags else items
+    )
+
+    if not filtered_items:
+        st.info("No headlines match the selected filters.")
+        return
+
+    for item in filtered_items:
         if item["timestamp"]:
             when = datetime.fromtimestamp(item["timestamp"], tz=timezone.utc).astimezone(ET)
             when_str = f"{when.strftime('%b %d')}, {format_time_no_leading_zero(when)} ET"
