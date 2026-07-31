@@ -64,7 +64,7 @@ CUSTOM_CSS = """
 
 [data-testid="stAppViewContainer"] { background-color: var(--maven-bg); }
 [data-testid="stHeader"] { background-color: rgba(0,0,0,0); }
-.block-container { padding-top: 1.5rem; padding-bottom: 1.5rem; max-width: 720px; text-align: center; }
+.block-container { padding-top: 1.5rem; padding-bottom: 1.5rem; max-width: 90%; text-align: center; }
 
 p, li, span, label, .stMarkdown { color: var(--maven-ink); }
 
