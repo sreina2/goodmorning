@@ -3,6 +3,7 @@ import re
 import socket
 from collections import Counter
 from datetime import datetime, timezone
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import feedparser
@@ -13,6 +14,7 @@ socket.setdefaulttimeout(6)
 
 st.set_page_config(page_title="Commodities Market Intelligence", page_icon="🚨", layout="wide")
 
+BASE_DIR = Path(__file__).parent
 ET = ZoneInfo("America/New_York")
 GREETING_NAME = "Evan"
 
@@ -95,6 +97,12 @@ p, li, span, label, .stMarkdown { color: var(--maven-ink); }
 [data-testid="stWidgetLabel"] { text-align: center !important; width: 100%; }
 [data-testid="stWidgetLabel"] label { width: 100%; justify-content: center !important; }
 
+.st-key-commodities-brief, .st-key-commodities-brief p, .st-key-commodities-brief li {
+    text-align: left !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+.st-key-commodities-brief em { color: var(--maven-accent); }
+
 .news-row { padding: 0.85rem 0 !important; border-bottom: 1px solid var(--maven-border); text-align: center !important; }
 .news-row a { color: var(--maven-ink) !important; text-decoration: none !important; font-weight: 600 !important; font-size: 1.25rem !important; }
 .news-row a:hover { color: var(--maven-accent) !important; }
@@ -156,6 +164,14 @@ def format_time_no_leading_zero(dt, with_seconds=False):
     hour12 = dt.hour % 12 or 12
     suffix = dt.strftime("%M:%S %p") if with_seconds else dt.strftime("%M %p")
     return f"{hour12}:{suffix}"
+
+
+def render_commodities_brief():
+    brief_path = BASE_DIR / "commodities_brief.md"
+    if not brief_path.exists():
+        return
+    with st.container(key="commodities-brief"):
+        st.markdown(brief_path.read_text(encoding="utf-8"))
 
 
 @st.cache_data(ttl=180)
@@ -288,4 +304,5 @@ st_autorefresh(interval=5 * 60 * 1000, key="news_refresh_timer")
 
 st.markdown('<p class="maven-subtitle">Commodities Market Intelligence</p>', unsafe_allow_html=True)
 
+render_commodities_brief()
 render_breaking_news()
