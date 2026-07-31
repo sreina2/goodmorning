@@ -68,11 +68,12 @@ CUSTOM_CSS = """
     --macro-ink: #AFDBFF;
     --macro-accent: #6FC3FF;
     --macro-border: #23405E;
+    --macro-button-bg: #1E4266;
 }
 
 [data-testid="stAppViewContainer"] { background-color: var(--macro-bg); }
 [data-testid="stHeader"] { background-color: rgba(0,0,0,0); }
-.block-container { padding-top: 1.5rem; padding-bottom: 1.5rem; max-width: 780px; text-align: center; }
+.block-container { padding-top: 1.5rem; padding-bottom: 1.5rem; max-width: 95%; text-align: center; }
 
 p, li, span, label, .stMarkdown, h1, h2, h3, h4 { color: var(--macro-ink); }
 
@@ -110,10 +111,26 @@ p, li, span, label, .stMarkdown, h1, h2, h3, h4 { color: var(--macro-ink); }
 [data-testid="stMetricValue"] { color: var(--macro-ink); font-size: 1.6rem; }
 [data-testid="stMetricLabel"] { color: var(--macro-accent); font-size: 0.95rem; }
 
-.stButton button { margin: 0.4rem auto 0 auto; min-height: 2.9rem; font-size: 1.1rem; background-color: var(--macro-accent); color: var(--macro-bg); border: none; font-weight: 600; }
+.stButton button {
+    margin: 0.4rem auto 0 auto;
+    min-height: 2.9rem;
+    font-size: 1.1rem;
+    background-color: var(--macro-button-bg) !important;
+    color: var(--macro-ink) !important;
+    border: 1px solid var(--macro-border) !important;
+    font-weight: 600;
+}
 
 [data-testid="stWidgetLabel"] { text-align: center !important; width: 100%; }
 [data-testid="stWidgetLabel"] label { width: 100%; justify-content: center !important; }
+
+[data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+    background-color: var(--macro-bg) !important;
+    border-color: var(--macro-border) !important;
+}
+[data-testid="stMultiSelect"] span { color: var(--macro-ink) !important; }
+[data-baseweb="popover"] [role="listbox"] { background-color: var(--macro-bg) !important; }
+[data-baseweb="popover"] li { color: var(--macro-ink) !important; }
 
 .news-row { padding: 0.85rem 0 !important; border-bottom: 1px solid var(--macro-border); text-align: center !important; }
 .news-row a { color: var(--macro-ink) !important; text-decoration: none !important; font-weight: 600 !important; font-size: 1.2rem !important; }
