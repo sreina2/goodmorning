@@ -131,8 +131,10 @@ p, li, span, label, .stMarkdown, h1, h2, h3, h4 { color: var(--macro-ink); }
     border-color: var(--macro-border) !important;
 }
 [data-testid="stMultiSelect"] span { color: var(--macro-ink) !important; }
-[data-baseweb="popover"] [role="listbox"] { background-color: var(--macro-bg) !important; }
-[data-baseweb="popover"] li { color: var(--macro-ink) !important; }
+[data-baseweb="popover"] { background-color: var(--macro-bg) !important; }
+[data-baseweb="popover"] ul { background-color: var(--macro-bg) !important; }
+[data-baseweb="popover"] li { background-color: var(--macro-bg) !important; color: var(--macro-ink) !important; }
+[data-baseweb="popover"] li:hover, [data-baseweb="popover"] li[aria-selected="true"] { background-color: var(--macro-button-bg) !important; }
 
 [data-baseweb="tag"] {
     background-color: #123A63 !important;
