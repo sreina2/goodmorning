@@ -23,6 +23,8 @@ NEWS_FEEDS = [
     ("Hedgeweek", "https://www.hedgeweek.com/feed/", "Fund News"),
     ("HedgeNordic", "https://www.hedgenordic.com/feed/", "Fund News"),
     ("Markets Media", "https://www.marketsmedia.com/feed/", "Fund News"),
+    ("Opalesque", "https://www.opalesque.com/rss.xml", "Fund News"),
+    ("Institutional Asset Manager", "https://www.institutionalassetmanager.co.uk/feed/", "Fund News"),
     ("Investing.com — Forex News", "https://www.investing.com/rss/news_1.rss", "Rates & FX"),
     ("Investing.com — Forex Opinion & Analysis", "https://www.investing.com/rss/forex.rss", "Rates & FX"),
     ("Investing.com — Bonds Analysis & Opinion", "https://www.investing.com/rss/bonds.rss", "Rates & FX"),
@@ -131,6 +133,13 @@ p, li, span, label, .stMarkdown, h1, h2, h3, h4 { color: var(--macro-ink); }
 [data-testid="stMultiSelect"] span { color: var(--macro-ink) !important; }
 [data-baseweb="popover"] [role="listbox"] { background-color: var(--macro-bg) !important; }
 [data-baseweb="popover"] li { color: var(--macro-ink) !important; }
+
+[data-baseweb="tag"] {
+    background-color: #123A63 !important;
+    border: 1px solid var(--macro-border) !important;
+}
+[data-baseweb="tag"] span { color: var(--macro-ink) !important; }
+[data-baseweb="tag"] svg { fill: var(--macro-ink) !important; }
 
 .news-row { padding: 0.85rem 0 !important; border-bottom: 1px solid var(--macro-border); text-align: center !important; }
 .news-row a { color: var(--macro-ink) !important; text-decoration: none !important; font-weight: 600 !important; font-size: 1.2rem !important; }
