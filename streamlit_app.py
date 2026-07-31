@@ -51,22 +51,22 @@ CUSTOM_CSS = """
 p, li, span, label, .stMarkdown { color: var(--maven-ink); }
 
 .maven-subtitle {
-    font-family: Georgia, 'Times New Roman', serif;
-    color: var(--maven-accent);
-    font-size: clamp(2rem, 4.5vw, 2.8rem);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    text-align: center;
-    margin: 0.25rem 0 1.1rem 0;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    color: var(--maven-accent) !important;
+    font-size: clamp(2rem, 4.5vw, 2.8rem) !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    text-align: center !important;
+    margin: 0.25rem 0 1.1rem 0 !important;
 }
 
 .maven-trending {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(1.15rem, 2.6vw, 1.55rem);
-    color: var(--maven-accent);
-    text-align: center;
-    margin: 0.9rem 0 1.4rem 0;
-    padding: 0.6rem 1rem;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: clamp(1.15rem, 2.6vw, 1.55rem) !important;
+    color: var(--maven-accent) !important;
+    text-align: center !important;
+    margin: 0.9rem 0 1.4rem 0 !important;
+    padding: 0.6rem 1rem !important;
     border-top: 1px solid var(--maven-border);
     border-bottom: 1px solid var(--maven-border);
 }
@@ -76,10 +76,10 @@ p, li, span, label, .stMarkdown { color: var(--maven-ink); }
 
 .stButton button { margin: 0 auto; }
 
-.news-row { padding: 0.85rem 0; border-bottom: 1px solid var(--maven-border); text-align: center; }
-.news-row a { color: var(--maven-ink); text-decoration: none; font-weight: 600; font-size: 1.25rem; }
-.news-row a:hover { color: var(--maven-accent); }
-.news-row .news-meta { color: var(--maven-accent); font-size: 1rem; margin-top: 0.25rem; }
+.news-row { padding: 0.85rem 0 !important; border-bottom: 1px solid var(--maven-border); text-align: center !important; }
+.news-row a { color: var(--maven-ink) !important; text-decoration: none !important; font-weight: 600 !important; font-size: 1.25rem !important; }
+.news-row a:hover { color: var(--maven-accent) !important; }
+.news-row .news-meta { color: var(--maven-accent) !important; font-size: 1rem !important; margin-top: 0.25rem !important; }
 
 #maven-splash {
     position: fixed;
